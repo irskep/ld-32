@@ -20,6 +20,8 @@ spriteRoot.style.height = SIZE.y + 'px'
 state = {
   cameraPos: new Vector2(0, 0)
   playerPos: new Vector3(-32, 0, -32)
+  playerDirection: new Vector3(1, 0, 0)
+  isPlayerMoving: false
 }
 
 

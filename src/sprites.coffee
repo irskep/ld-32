@@ -20,8 +20,8 @@ createCanvasSprite = (origin, size, draw) ->
   canvas.style.height = "#{size2.y}px"
   ctx = canvas.getContext('2d')
 
-  redraw = (t) -> draw({originOffset, ctx, canvas, t})
-  redraw(0)
+  redraw = (t, state) -> draw({originOffset, ctx, canvas, t, state})
+  redraw(0, null)
 
   {origin, originOffset, size, el: canvas, id: _.uniqueId(), redraw}
 

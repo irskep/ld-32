@@ -116,29 +116,38 @@ getBoxSprite = (origin, size) ->
     drawLine(ctx, originOffset, centerTopBack, topZ)
 
 
-getFoot = (t, size, onAxis, offAxis, [onAxisFraction, offAxisFraction, circleOffset]) ->
-  period = 600
-  pos = new Vector3(
-    size[onAxis] * onAxisFraction, 2,
-    size[offAxis] * offAxisFraction)
-  progress = (t % period) / period
-  angle = -(Math.PI * 2 * progress + Math.PI * 2 * circleOffset)
-  pos.add getCircleVector(onAxis, 'y', 2, angle)
+getJoint = (t, size, onAxis, offAxis, [onAxisFraction, offAxisFraction]) ->
+  pos = new Vector3(0, size.y / 4, 0)
+  pos[onAxis] = size[onAxis] * onAxisFraction
+  pos[offAxis] = size[offAxis] * offAxisFraction
+  pos
 
 
-getKnee = (t, size, onAxis, offAxis, [onAxisFraction, offAxisFraction, circleOffset]) ->
-  period = 600
-  pos = new Vector3(
-    size[onAxis] * onAxisFraction, size.y / 2,
-    size[offAxis] * offAxisFraction)
+getKnee = (t, size, onAxis, offAxis, isReversed, isMoving, [onAxisFraction, offAxisFraction, circleOffset]) ->
+  period = 200
+  pos = new Vector3(0, size.y / 2, 0)
+  pos[onAxis] = size[onAxis] * onAxisFraction
+  pos[offAxis] = size[offAxis] * offAxisFraction
   progress = (t % period) / period
-  angle = -(Math.PI * 2 * progress + Math.PI * 2 * circleOffset)
-  pos.add getCircleVector(onAxis, 'y', 1, angle)
+  angle = Math.PI * 2 * progress + Math.PI * 2 * circleOffset
+  if isReversed then angle *= -1
+  if isMoving then pos.add getCircleVector(onAxis, 'y', 1, angle) else pos
+
+
+getFoot = (t, size, onAxis, offAxis, isReversed, isMoving, [onAxisFraction, offAxisFraction, circleOffset]) ->
+  period = 200
+  pos = new Vector3(0, 2, 0)
+  pos[onAxis] = size[onAxis] * onAxisFraction
+  pos[offAxis] = size[offAxis] * offAxisFraction
+  progress = (t % period) / period
+  angle = Math.PI * 2 * progress + Math.PI * 2 * circleOffset
+  if isReversed then angle *= -1
+  if isMoving then pos.add getCircleVector(onAxis, 'y', 2, angle) else pos
 
 
 getPlayerSprite = (origin) ->
   size = new Vector3(32, 32, 32)
-  createCanvasSprite origin, size, ({originOffset, ctx, canvas, t}) ->
+  createCanvasSprite origin, size, ({originOffset, ctx, canvas, t, state}) ->
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     #canvas.style.border = '1px solid red'
     ctx.strokeStyle = '#fff'
@@ -152,54 +161,74 @@ getPlayerSprite = (origin) ->
     topX = new Vector3(size.x, size.y, 0)
     topZ = new Vector3(0, size.y, size.z)
 
-    onAxis = 'x'
-    offAxis = 'z'
-    legsBottomFront = [
-      getFoot(t, size, onAxis, offAxis, [0.2, 0.1, 0.0]),
-      getFoot(t, size, onAxis, offAxis, [0.4, 0.1, 0.25]),
-      getFoot(t, size, onAxis, offAxis, [0.6, 0.1, 0.5]),
-      getFoot(t, size, onAxis, offAxis, [0.8, 0.1, 0.75]),
+    middle = topX.add(topZ).add(bottomX).add(bottomZ).multiply(1/4)
+
+    isMoving = !!state?.isPlayerMoving
+    onAxis = null
+    offAxis = null
+    if state?.playerDirection?.x
+      [onAxis, offAxis] = ['x', 'z']
+    else
+      [onAxis, offAxis] = ['z', 'x']
+    isReversed = false
+    if state?.playerDirection?.x > 0 or state?.playerDirection?.z > 0
+      isReversed = true
+
+    jointsFront = [
+      getJoint(t, size, onAxis, offAxis, [0.4, 0.3]),
+      getJoint(t, size, onAxis, offAxis, [0.5, 0.3]),
+      getJoint(t, size, onAxis, offAxis, [0.6, 0.3]),
     ]
-    legsTopFront = [
-      getKnee(t, size, onAxis, offAxis, [0.35, 0.1, 0.5]),
-      getKnee(t, size, onAxis, offAxis, [0.45, 0.1, 0.75]),
-      getKnee(t, size, onAxis, offAxis, [0.55, 0.1, 0.0]),
-      getKnee(t, size, onAxis, offAxis, [0.64, 0.1, 0.25]),
+    kneesFront = [
+      getKnee(t, size, onAxis, offAxis, isReversed, isMoving, [0.3, 0.2, 0.66]),
+      getKnee(t, size, onAxis, offAxis, isReversed, isMoving, [0.5, 0.2, 0.0]),
+      getKnee(t, size, onAxis, offAxis, isReversed, isMoving, [0.7, 0.2, 0.33]),
+    ]
+    legsFront = [
+      getFoot(t, size, onAxis, offAxis, isReversed, isMoving, [0.2, 0.1, 0.0]),
+      getFoot(t, size, onAxis, offAxis, isReversed, isMoving, [0.5, 0.1, 0.33]),
+      getFoot(t, size, onAxis, offAxis, isReversed, isMoving, [0.8, 0.1, 0.66]),
     ]
 
-    legsBottomBack = [
-      getFoot(t, size, onAxis, offAxis, [0.2, 0.9, 0.5]),
-      getFoot(t, size, onAxis, offAxis, [0.4, 0.9, 0.75]),
-      getFoot(t, size, onAxis, offAxis, [0.6, 0.9, 0.0]),
-      getFoot(t, size, onAxis, offAxis, [0.8, 0.9, 0.25]),
+    jointsBack = [
+      getJoint(t, size, onAxis, offAxis, [0.4, 0.7]),
+      getJoint(t, size, onAxis, offAxis, [0.5, 0.7]),
+      getJoint(t, size, onAxis, offAxis, [0.6, 0.7]),
     ]
-    legsTopBack = [
-      getKnee(t, size, onAxis, offAxis, [0.35, 0.9, 0.0]),
-      getKnee(t, size, onAxis, offAxis, [0.45, 0.9, 0.25]),
-      getKnee(t, size, onAxis, offAxis, [0.55, 0.9, 0.5]),
-      getKnee(t, size, onAxis, offAxis, [0.65, 0.9, 0.75]),
+    kneesBack = [
+      getKnee(t, size, onAxis, offAxis, isReversed, isMoving, [0.3, 0.8, 0.0]),
+      getKnee(t, size, onAxis, offAxis, isReversed, isMoving, [0.5, 0.8, 0.33]),
+      getKnee(t, size, onAxis, offAxis, isReversed, isMoving, [0.7, 0.8, 0.66]),
+    ]
+    legsBack = [
+      getFoot(t, size, onAxis, offAxis, isReversed, isMoving, [0.2, 0.9, 0.33]),
+      getFoot(t, size, onAxis, offAxis, isReversed, isMoving, [0.5, 0.9, 0.66]),
+      getFoot(t, size, onAxis, offAxis, isReversed, isMoving, [0.8, 0.9, 0.0]),
     ]
 
     ctx.strokeWidth = 1
-    for legPos in legsBottomBack
+    for legPos in legsBack
       drawCircleStroke(ctx, originOffset, legPos, 1)
-    for kneePos in legsTopBack
+    for kneePos in kneesBack
       drawCircleStroke(ctx, originOffset, kneePos, 1)
-    for [legPos, kneePos] in _.zip(legsTopBack, legsBottomBack)
+    for [kneePos, legPos] in _.zip(kneesBack, legsBack)
       drawLine(ctx, originOffset, legPos, kneePos)
+    for [kneePos, jointPos] in _.zip(kneesBack, jointsBack)
+      drawLine(ctx, originOffset, kneePos, jointPos)
 
     ctx.strokeWidth = 2
-    center = topX.add(topZ).add(bottomX).add(bottomZ).multiply(1/4)
-    drawCircleFill(ctx, originOffset, center, 14)
-    drawCircleStroke(ctx, originOffset, center, 14)
+    drawCircleFill(ctx, originOffset, middle, 14)
+    drawCircleStroke(ctx, originOffset, middle, 14)
 
     ctx.strokeWidth = 1
-    for legPos in legsBottomFront
+    for legPos in legsFront
       drawCircleStroke(ctx, originOffset, legPos, 1)
-    for kneePos in legsTopFront
+    for kneePos in kneesFront
       drawCircleStroke(ctx, originOffset, kneePos, 1)
-    for [legPos, kneePos] in _.zip(legsTopFront, legsBottomFront)
+    for [kneePos, legPos] in _.zip(kneesFront, legsFront)
       drawLine(ctx, originOffset, legPos, kneePos)
+    for [kneePos, jointPos] in _.zip(kneesFront, jointsFront)
+      drawLine(ctx, originOffset, kneePos, jointPos)
 
 
 playerSprite = null
@@ -217,7 +246,7 @@ applySprites = (state, t, dt) ->
     addInitialSprites()
 
   playerSprite.origin = state.playerPos
-  playerSprite.redraw(t)
+  playerSprite.redraw(t, state)
   sortSprites()
   for sprite in sprites
     p = world3ToWorld2(sprite.origin)
