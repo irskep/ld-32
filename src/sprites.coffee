@@ -1,7 +1,9 @@
 {Vector2, Rect2, Vector3} = require './geometry'
 {world3ToWorld2} = require './projection'
 
-createCanvasSprite = (origin, size, draw) ->
+spriteIdToSprite = {}
+
+createCanvasSprite = (initialState, origin, size, draw) ->
   canvas = document.createElement('canvas')
   sizePoints = [
     new Vector3(0, 0, 0),
@@ -21,9 +23,11 @@ createCanvasSprite = (origin, size, draw) ->
   ctx = canvas.getContext('2d')
 
   redraw = (t, state) -> draw({originOffset, ctx, canvas, t, state})
-  redraw(0, null)
+  redraw(0, initialState)
 
-  {origin, originOffset, size, el: canvas, id: _.uniqueId(), redraw}
+  sprite = {origin, originOffset, size, el: canvas, id: _.uniqueId(), redraw}
+  spriteIdToSprite[sprite.id] = sprite
+  sprite
 
 
-module.exports = {createCanvasSprite}
+module.exports = {createCanvasSprite, spriteIdToSprite}

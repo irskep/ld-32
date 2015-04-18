@@ -11,8 +11,18 @@ getCirclePos = (t, period=1000, radius=256) ->
   angle = Math.PI * 2 * progress
   new Vector2(Math.cos(angle) / 2 * 256, Math.sin(angle) / 2 * 256)
 
+getIsCellAvailable = ({boardSize, player, npcs}, cellPos) ->
+  return false if cellPos.x < 0
+  return false if cellPos.z < 0
+  return false if cellPos.x >= boardSize.x
+  return false if cellPos.z >= boardSize.z
+  return false if player.targetCell.isEqual(cellPos)
+  for {targetCell} in npcs
+    return false if targetCell.isEqual(cellPos)
+  return true
 
-moveGridEntity = (speed, entityState, t, dt) ->
+
+mutateGridEntityState = (speed, state, entityState, t, dt) ->
   movementThisFrame = speed * dt
   entityState.isMoving = false
   if not getCellOrigin(entityState.targetCell).isEqual(entityState.origin)
@@ -27,8 +37,8 @@ moveGridEntity = (speed, entityState, t, dt) ->
   getCellOrigin(entityState.targetCell).isEqual(entityState.origin)
 
 
-updateStateFreeInput = (entityState, t, dt) ->
-  canChangeTargetCell = moveGridEntity(100, entityState, t, dt)
+getNextPlayerState = (state, entityState, t, dt) ->
+  canChangeTargetCell = mutateGridEntityState(100, state, entityState, t, dt)
 
   # ^ may cascade
   if canChangeTargetCell
@@ -40,7 +50,7 @@ updateStateFreeInput = (entityState, t, dt) ->
       ['playerDown', new Vector3(-1, 0, 0)],
     ]
     for [keyName, directionVector] in inputs
-      if getIsKeyDown(keyName)
+      if getIsKeyDown(keyName) and getIsCellAvailable(state, fromCell.add directionVector)
         entityState.targetCell = fromCell.add directionVector
         entityState.direction = directionVector
         entityState.isMoving = true
@@ -48,20 +58,35 @@ updateStateFreeInput = (entityState, t, dt) ->
   entityState
 
 
+DIRECTIONS = [
+  new Vector3(0, 0, 1), new Vector3(0, 0, -1),
+  new Vector3(1, 0, 0), new Vector3(-1, 0, 0),
+]
+mutateNPCState = (state, entityState, t, dt) ->
+  # TODO: leg animation speed should depend on entity speed
+  canChangeTargetCell = mutateGridEntityState(80, state, entityState, t, dt)
+
+  # ^ may cascade
+  if canChangeTargetCell
+    fromCell = entityState.targetCell
+    directions = _.filter DIRECTIONS, (d) ->
+      getIsCellAvailable(state, fromCell.add(d))
+    nextDirection = _.choice directions
+    entityState.targetCell = fromCell.add nextDirection
+    entityState.direction = nextDirection
+
+  entityState.isMoving = true  # always moving
+  entityState
+
+
 applyInput = (state, t, dt) ->
   dt /= 1000  # in seconds, please
 
-  state.player = updateStateFreeInput(state.player, t, dt)
+  state.player = getNextPlayerState(state, state.player, t, dt)
   state.cameraPos = world3ToWorld2(state.player.origin)
 
-  ###
-  dCameraPos = new Vector2(0, 0)
-  if getIsKeyDown('cameraLeft') then dCameraPos.x -= 300 * dt
-  if getIsKeyDown('cameraRight') then dCameraPos.x += 300 * dt
-  if getIsKeyDown('cameraUp') then dCameraPos.y -= 300 * dt
-  if getIsKeyDown('cameraDown') then dCameraPos.y += 300 * dt
-  state.cameraPos = state.cameraPos.add(dCameraPos)
-  ###
+  for npcState in state.npcs
+    mutateNPCState(state, npcState, t, dt)
 
   keyboard.markKeyCheckpoint()
   state

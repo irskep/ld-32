@@ -1,5 +1,5 @@
 {world3ToWorld2} = require './projection'
-{createCanvasSprite} = require './sprites'
+{createCanvasSprite, spriteIdToSprite} = require './sprites'
 {Vector3} = require './geometry'
 isInFront = require './isInFront'
 
@@ -41,9 +41,12 @@ drawCircleStroke = (ctx, originOffset, center, radius) ->
   ctx.stroke()
 
 
-addSprite = (sprite) ->
+entityIdToSpriteId = {}
+addSprite = (sprite, entity=null) ->
   spriteRootEl.appendChild(sprite.el)
   sprites.push sprite
+  if entity
+    entityIdToSpriteId[entity.id] = sprite.id
 
 
 sortSprites = ->
@@ -59,10 +62,10 @@ getCircleVector = (axis1, axis2, radius, angle) ->
   v
 
 
-getGridSprite = (cellSize, boardSize) ->
+getGridSprite = (state, cellSize, boardSize) ->
   s = new Vector3(boardSize.x, 0, boardSize.z).multiply(cellSize)
 
-  createCanvasSprite new Vector3(0, 0, 0), s, ({originOffset, ctx, canvas}) ->
+  createCanvasSprite null, new Vector3(0, 0, 0), s, ({originOffset, ctx, canvas}) ->
     #canvas.style.border = '1px solid red'
     ctx.strokeStyle = '#aaa'
 
@@ -77,8 +80,8 @@ getGridSprite = (cellSize, boardSize) ->
       z += cellSize
 
 
-getBoxSprite = (origin, size) ->
-  createCanvasSprite origin, size, ({originOffset, ctx, canvas}) ->
+getBoxSprite = (state, origin, size) ->
+  createCanvasSprite state, origin, size, ({originOffset, ctx, canvas}) ->
     #canvas.style.border = '1px solid red'
     ctx.strokeStyle = '#afa'
     ctx.strokeWidth = 2
@@ -143,13 +146,13 @@ getFoot = (t, size, onAxis, offAxis, isReversed, isMoving, [onAxisFraction, offA
   if isMoving then pos.add getCircleVector(onAxis, 'y', 2, angle) else pos
 
 
-getPlayerSprite = (origin) ->
+getBugSprite = (initialState, fillColor='#444') ->
   size = new Vector3(32, 32, 32)
-  createCanvasSprite origin, size, ({originOffset, ctx, canvas, t, state}) ->
+  createCanvasSprite initialState, initialState.origin, size, ({originOffset, ctx, canvas, t, state}) ->
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     #canvas.style.border = '1px solid red'
     ctx.strokeStyle = '#fff'
-    ctx.fillStyle = '#444'
+    ctx.fillStyle = fillColor
 
     zero = new Vector3(0, 0, 0)
     centerTopFront = new Vector3(0, size.y, 0)
@@ -229,22 +232,30 @@ getPlayerSprite = (origin) ->
       drawLine(ctx, originOffset, kneePos, jointPos)
 
 
-playerSprite = null
 addInitialSprites = (state) ->
-  addSprite getGridSprite(32, state.boardSize)
+  addSprite getGridSprite(null, 32, state.boardSize)
   #for x in [0..5]
   #  addSprite getBoxSprite(new Vector3(x * 32, 0, 32), new Vector3(32, 28, 32))
 
-  playerSprite = getPlayerSprite(new Vector3(-32, 0, -32))
-  addSprite playerSprite
+  addSprite(getBugSprite(state.player, '#444'), state.player)
+
+  for npcState in state.npcs
+    addSprite(getBugSprite(npcState, '#822'), npcState)
 
 
 applySprites = (state, t, dt) ->
   unless sprites.length
     addInitialSprites(state)
 
+  playerSprite = spriteIdToSprite[entityIdToSpriteId[state.player.id]]
   playerSprite.origin = state.player.origin
   playerSprite.redraw(t, state.player)
+
+  for npcState in state.npcs
+    sprite = spriteIdToSprite[entityIdToSpriteId[npcState.id]]
+    sprite.origin = npcState.origin
+    sprite.redraw(t, npcState)
+
   sortSprites()
   for sprite in sprites
     p = world3ToWorld2(sprite.origin)
