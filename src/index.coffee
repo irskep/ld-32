@@ -18,10 +18,13 @@ spriteRoot.style.height = SIZE.y + 'px'
 
 
 state = {
+  boardSize: new Vector3(16, 0, 16)
   cameraPos: new Vector2(0, 0)
-  playerPos: new Vector3(-32, 0, -32)
-  playerDirection: new Vector3(1, 0, 0)
-  isPlayerMoving: false
+  player:
+    origin: new Vector3(8 * 32, 0, 8 * 32)
+    targetCell: new Vector3(8, 0, 8)
+    direction: new Vector3(1, 0, 0)
+  npcs: []
 }
 
 

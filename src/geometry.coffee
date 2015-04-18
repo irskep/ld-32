@@ -18,7 +18,7 @@ class Vector3
     throw "NaN" if isNaN(@x) or isNaN(@y) or isNaN(@z)
   floor: -> new Vector3(Math.floor(@x), Math.floor(@y), Math.floor(@z))
   ceil: -> new Vector3(Math.ceil(@x), Math.ceil(@y), Math.ceil(@z))
-  multiply: (factor) -> new Vector3(@x * factor, @y * factor, @y * factor)
+  multiply: (factor) -> new Vector3(@x * factor, @y * factor, @z * factor)
   pairMultiply: (other) ->
     new Vector3(@x * other.x, @y * other.y, @z * other.z)
   pairDivide: (other) -> new Vector3(@x / other.x, @y / other.y, @z / other.z)

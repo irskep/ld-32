@@ -59,12 +59,11 @@ getCircleVector = (axis1, axis2, radius, angle) ->
   v
 
 
-getGridSprite = (cellSize, numCells) ->
-  length = cellSize * numCells
-  p = new Vector3(-length / 2, 0, -length / 2)
-  s = new Vector3(length, 0, length)
+getGridSprite = (cellSize, boardSize) ->
+  s = new Vector3(boardSize.x, 0, boardSize.z).multiply(cellSize)
+  console.log boardSize
 
-  createCanvasSprite p, s, ({originOffset, ctx, canvas}) ->
+  createCanvasSprite new Vector3(0, 0, 0), s, ({originOffset, ctx, canvas}) ->
     #canvas.style.border = '1px solid red'
     ctx.strokeStyle = '#aaa'
 
@@ -163,15 +162,15 @@ getPlayerSprite = (origin) ->
 
     middle = topX.add(topZ).add(bottomX).add(bottomZ).multiply(1/4)
 
-    isMoving = !!state?.isPlayerMoving
+    isMoving = !!state?.isMoving
     onAxis = null
     offAxis = null
-    if state?.playerDirection?.x
+    if state?.direction?.x
       [onAxis, offAxis] = ['x', 'z']
     else
       [onAxis, offAxis] = ['z', 'x']
     isReversed = false
-    if state?.playerDirection?.x > 0 or state?.playerDirection?.z > 0
+    if state?.direction?.x > 0 or state?.direction?.z > 0
       isReversed = true
 
     jointsFront = [
@@ -232,10 +231,10 @@ getPlayerSprite = (origin) ->
 
 
 playerSprite = null
-addInitialSprites = ->
-  addSprite getGridSprite(32, 16)
-  for x in [0..5]
-    addSprite getBoxSprite(new Vector3(x * 32, 0, 32), new Vector3(32, 28, 32))
+addInitialSprites = (state) ->
+  addSprite getGridSprite(32, state.boardSize)
+  #for x in [0..5]
+  #  addSprite getBoxSprite(new Vector3(x * 32, 0, 32), new Vector3(32, 28, 32))
 
   playerSprite = getPlayerSprite(new Vector3(-32, 0, -32))
   addSprite playerSprite
@@ -243,10 +242,10 @@ addInitialSprites = ->
 
 applySprites = (state, t, dt) ->
   unless sprites.length
-    addInitialSprites()
+    addInitialSprites(state)
 
-  playerSprite.origin = state.playerPos
-  playerSprite.redraw(t, state)
+  playerSprite.origin = state.player.origin
+  playerSprite.redraw(t, state.player)
   sortSprites()
   for sprite in sprites
     p = world3ToWorld2(sprite.origin)
