@@ -61,7 +61,6 @@ getCircleVector = (axis1, axis2, radius, angle) ->
 
 getGridSprite = (cellSize, boardSize) ->
   s = new Vector3(boardSize.x, 0, boardSize.z).multiply(cellSize)
-  console.log boardSize
 
   createCanvasSprite new Vector3(0, 0, 0), s, ({originOffset, ctx, canvas}) ->
     #canvas.style.border = '1px solid red'

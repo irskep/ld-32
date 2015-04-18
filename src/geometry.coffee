@@ -11,6 +11,9 @@ class Vector2
   add: (other) -> new Vector2(@x + other.x, @y + other.y)
   subtract: (other) -> new Vector2(@x - other.x, @y - other.y)
   getLength: -> Math.sqrt(@x * @x + @y * @y)
+  normalized: ->
+    length = @getLength()
+    new Vector2(@x / length, @y / length)
 
 
 class Vector3
@@ -28,6 +31,9 @@ class Vector3
   subtract: (other) -> new Vector3(@x - other.x, @y - other.y, @z - other.z)
   dot: (other) -> (@x * other.x + @y * other.y + @z * other.z)
   getLength: -> Math.sqrt(@dot(this))
+  normalized: ->
+    length = @getLength()
+    new Vector3(@x / length, @y / length, @z / length)
 
 
 class Rect2

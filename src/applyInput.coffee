@@ -3,6 +3,8 @@ keyboard = require './keyboard'
 {getIsKeyDown} = keyboard
 {world3ToWorld2} = require './projection'
 
+getCellOrigin = (cellPos) -> cellPos.multiply(32)
+
 getCirclePos = (t, period=1000, radius=256) ->
   period = 1000
   progress = (t % period) / period
@@ -10,26 +12,39 @@ getCirclePos = (t, period=1000, radius=256) ->
   new Vector2(Math.cos(angle) / 2 * 256, Math.sin(angle) / 2 * 256)
 
 
-updateStateFreeInput = (entityState, t, dt) ->
-  dPlayerPos = new Vector3(0, 0, 0)
+moveGridEntity = (speed, entityState, t, dt) ->
+  movementThisFrame = speed * dt
   entityState.isMoving = false
-  if getIsKeyDown('playerLeft')
-    dPlayerPos = new Vector3(0, 0, 100 * dt)
-    entityState.direction = new Vector3(0, 0, 1)
+  if not getCellOrigin(entityState.targetCell).isEqual(entityState.origin)
     entityState.isMoving = true
-  if getIsKeyDown('playerRight')
-    dPlayerPos = new Vector3(0, 0, -100 * dt)
-    entityState.direction = new Vector3(0, 0, -1)
-    entityState.isMoving = true
-  if getIsKeyDown('playerUp')
-    dPlayerPos = new Vector3(100 * dt, 0, 0)
-    entityState.direction = new Vector3(1, 0, 0)
-    entityState.isMoving = true
-  if getIsKeyDown('playerDown')
-    dPlayerPos = new Vector3(-100 * dt, 0, 0)
-    entityState.direction = new Vector3(-1, 0, 0)
-    entityState.isMoving = true
-  entityState.origin = entityState.origin.add(dPlayerPos)
+    cellOrigin = getCellOrigin(entityState.targetCell)
+    targetDifference = cellOrigin.subtract(entityState.origin)
+    if targetDifference.getLength() <= movementThisFrame
+      entityState.origin = cellOrigin
+    else
+      posChange = targetDifference.normalized().multiply(movementThisFrame)
+      entityState.origin = entityState.origin.add(posChange)
+  getCellOrigin(entityState.targetCell).isEqual(entityState.origin)
+
+
+updateStateFreeInput = (entityState, t, dt) ->
+  canChangeTargetCell = moveGridEntity(100, entityState, t, dt)
+
+  # ^ may cascade
+  if canChangeTargetCell
+    fromCell = entityState.targetCell
+    inputs = [
+      ['playerLeft', new Vector3(0, 0, 1)],
+      ['playerRight', new Vector3(0, 0, -1)],
+      ['playerUp', new Vector3(1, 0, 0)],
+      ['playerDown', new Vector3(-1, 0, 0)],
+    ]
+    for [keyName, directionVector] in inputs
+      if getIsKeyDown(keyName)
+        entityState.targetCell = fromCell.add directionVector
+        entityState.direction = directionVector
+        entityState.isMoving = true
+
   entityState
 
 
