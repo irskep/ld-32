@@ -10,7 +10,11 @@ applyInput = require './applyInput'
 applyReact = require './applyReact'
 applySprites = require './applySprites'
 
-window.SIZE = new Vector2(500, 500)
+window.SIZE = new Vector2(600, 700)
+
+spriteRoot = document.querySelectorAll('#sprite-root')[0]
+spriteRoot.style.width = SIZE.x + 'px'
+spriteRoot.style.height = SIZE.y + 'px'
 
 
 state = {

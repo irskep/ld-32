@@ -37,7 +37,7 @@ Root = React.createClass
 
 
 applyReact = (state, t, dt) ->
-  React.renderComponent(<Root state={state} />, reactRootEl)
+  #React.renderComponent(<Root state={state} />, reactRootEl)
   ReactUpdates.flushBatchedUpdates()
   state
 

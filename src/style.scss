@@ -12,10 +12,13 @@ canvas.sprite {
 #sprite-root, #react-root, #root-root {
   position: absolute;
   overflow: visible;
-  width: 0;
-  height: 0;
   top: 0;
   left: 0;
+}
+
+#sprite-root {
+  border: 1px solid yellow;
+  overflow: hidden;
 }
 
 @mixin gradient-vertical($topColor, $bottomColor) {
