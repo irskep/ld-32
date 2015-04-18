@@ -1,6 +1,6 @@
 {Vector3} = require './geometry'
 
-viewerNormal = Vector3(-1, 0, -1)
+viewerNormal = new Vector3(-1, 0, -1)
 
 isInFront = (spriteA, spriteB) ->
   #return spriteA.layer > spriteB.layer  if spriteA.layer isnt spriteB.layer
@@ -43,8 +43,8 @@ isInFront = (spriteA, spriteB) ->
     (maxB.x + minB.x) / 2, minB.y, (maxB.z + minB.z) / 2)
 
   # dot product
-  score1 = Vector3.dot(viewerNormal, centerBaseA)
-  score2 = Vector3.dot(viewerNormal, centerBaseB)
+  score1 = viewerNormal.dot(centerBaseA)
+  score2 = viewerNormal.dot(centerBaseB)
 
   return score1 > score2  unless score1 is score2
 

@@ -96,15 +96,50 @@ getBoxSprite = (origin, size) ->
     drawLine(ctx, originOffset, centerTopBack, topZ)
 
 
+getPlayerSprite = (origin) ->
+  size = new Vector3(32, 32, 32)
+  createCanvasSprite origin, size, ({originOffset, ctx, canvas}) ->
+    #canvas.style.border = '1px solid red'
+    ctx.strokeStyle = '#fff'
+    ctx.fillStyle = '#444'
+    ctx.strokeWidth = 2
+
+    transform = (v) -> world3ToWorld2(v).add(originOffset)
+
+    zero = transform new Vector3(0, 0, 0)
+    centerTopFront = transform new Vector3(0, size.y, 0)
+    centerTopBack = transform new Vector3(size.x, size.y, size.z)
+    bottomX = transform new Vector3(size.x, 0, 0)
+    bottomZ = transform new Vector3(0, 0, size.z)
+    topX = transform new Vector3(size.x, size.y, 0)
+    topZ = transform new Vector3(0, size.y, size.z)
+
+    center = topX.add(topZ).add(bottomX).add(bottomZ).multiply(1/4)
+    r = (bottomX.x - bottomZ.x) / 2 * 0.5
+
+    ctx.beginPath()
+    ctx.arc(center.x, center.y, r, 0, Math.PI * 2, false)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(center.x, center.y, r, 0, Math.PI * 2, false)
+    ctx.stroke()
+
+
+playerSprite = null
 addInitialSprites = ->
   addSprite getGridSprite(32, 16)
   for x in [0..5]
     addSprite getBoxSprite(new Vector3(x * 32, 0, 32), new Vector3(32, 28, 32))
 
+  playerSprite = getPlayerSprite(new Vector3(-32, 0, -32))
+  addSprite playerSprite
+
 
 applySprites = (state, t, dt) ->
   unless sprites.length
     addInitialSprites()
+
+  playerSprite.origin = state.playerPos
   sortSprites()
   for sprite in sprites
     p = world3ToWorld2(sprite.origin)

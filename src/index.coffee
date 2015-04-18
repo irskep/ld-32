@@ -4,7 +4,7 @@ window.React = React = require 'react/addons'
 window.Bacon = require 'baconjs'
 require './util'
 
-{Vector2} = require './geometry'
+{Vector2, Vector3} = require './geometry'
 
 applyInput = require './applyInput'
 applyReact = require './applyReact'
@@ -19,6 +19,7 @@ spriteRoot.style.height = SIZE.y + 'px'
 
 state = {
   cameraPos: new Vector2(0, 0)
+  playerPos: new Vector3(-32, 0, 32)
 }
 
 

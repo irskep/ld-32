@@ -1,4 +1,4 @@
-{Vector2} = require './geometry'
+{Vector2, Vector3} = require './geometry'
 keyboard = require './keyboard'
 {getIsKeyDown} = keyboard
 
@@ -11,12 +11,20 @@ getCirclePos = (t, period=1000, radius=256) ->
 
 applyInput = (state, t, dt) ->
   dt /= 1000  # in seconds, please
-  dp = new Vector2(0, 0)
-  if getIsKeyDown('playerLeft') then dp.x -= 300 * dt
-  if getIsKeyDown('playerRight') then dp.x += 300 * dt
-  if getIsKeyDown('playerUp') then dp.y -= 300 * dt
-  if getIsKeyDown('playerDown') then dp.y += 300 * dt
-  state.cameraPos = state.cameraPos.add(dp)
+
+  dPlayerPos = new Vector3(0, 0, 0)
+  if getIsKeyDown('playerLeft') then dPlayerPos.z += 300 * dt
+  if getIsKeyDown('playerRight') then dPlayerPos.z -= 300 * dt
+  if getIsKeyDown('playerUp') then dPlayerPos.x += 300 * dt
+  if getIsKeyDown('playerDown') then dPlayerPos.x -= 300 * dt
+  state.playerPos = state.playerPos.add(dPlayerPos)
+
+  dCameraPos = new Vector2(0, 0)
+  if getIsKeyDown('cameraLeft') then dCameraPos.x -= 300 * dt
+  if getIsKeyDown('cameraRight') then dCameraPos.x += 300 * dt
+  if getIsKeyDown('cameraUp') then dCameraPos.y -= 300 * dt
+  if getIsKeyDown('cameraDown') then dCameraPos.y += 300 * dt
+  state.cameraPos = state.cameraPos.add(dCameraPos)
 
   keyboard.markKeyCheckpoint()
   return state

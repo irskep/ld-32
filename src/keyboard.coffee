@@ -2,10 +2,14 @@ keyCodeToName = require './keyCodeToName'
 keyNameToCode = _.invert(keyCodeToName)
 
 actionToKeyName =
-  playerLeft: 'a'
-  playerRight: 'd'
-  playerUp: 'w'
-  playerDown: 's'
+  playerLeft: 'left'
+  playerRight: 'right'
+  playerUp: 'up'
+  playerDown: 'down'
+  cameraLeft: 'a'
+  cameraRight: 'd'
+  cameraUp: 'w'
+  cameraDown: 's'
   playerAction: 'space'
   playerStabLeft: ','
   playerStabRight: '.'
