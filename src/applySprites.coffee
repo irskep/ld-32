@@ -28,6 +28,19 @@ drawPolygon = (ctx, originOffset, points) ->
   ctx.fill()
 
 
+drawCircleFill = (ctx, originOffset, center, radius) ->
+  center2 = world3ToWorld2(center).add(originOffset)
+  ctx.beginPath()
+  ctx.arc(center2.x, center2.y, radius, 0, Math.PI * 2, false)
+  ctx.fill()
+
+drawCircleStroke = (ctx, originOffset, center, radius) ->
+  center2 = world3ToWorld2(center).add(originOffset)
+  ctx.beginPath()
+  ctx.arc(center2.x, center2.y, radius, 0, Math.PI * 2, false)
+  ctx.stroke()
+
+
 addSprite = (sprite) ->
   spriteRootEl.appendChild(sprite.el)
   sprites.push sprite
@@ -37,6 +50,13 @@ sortSprites = ->
   sprites.sort (a, b) -> if isInFront(a, b) then 1 else -1
   _.each sprites, (s, i) ->
     s.el.style.zIndex = i
+
+
+getCircleVector = (axis1, axis2, radius, angle) ->
+  v = new Vector3(0, 0, 0)
+  v[axis1] = Math.cos(angle) * radius
+  v[axis2] = Math.sin(angle) * radius
+  v
 
 
 getGridSprite = (cellSize, numCells) ->
@@ -96,33 +116,90 @@ getBoxSprite = (origin, size) ->
     drawLine(ctx, originOffset, centerTopBack, topZ)
 
 
+getFoot = (t, size, onAxis, offAxis, [onAxisFraction, offAxisFraction, circleOffset]) ->
+  period = 600
+  pos = new Vector3(
+    size[onAxis] * onAxisFraction, 2,
+    size[offAxis] * offAxisFraction)
+  progress = (t % period) / period
+  angle = -(Math.PI * 2 * progress + Math.PI * 2 * circleOffset)
+  pos.add getCircleVector(onAxis, 'y', 2, angle)
+
+
+getKnee = (t, size, onAxis, offAxis, [onAxisFraction, offAxisFraction, circleOffset]) ->
+  period = 600
+  pos = new Vector3(
+    size[onAxis] * onAxisFraction, size.y / 2,
+    size[offAxis] * offAxisFraction)
+  progress = (t % period) / period
+  angle = -(Math.PI * 2 * progress + Math.PI * 2 * circleOffset)
+  pos.add getCircleVector(onAxis, 'y', 1, angle)
+
+
 getPlayerSprite = (origin) ->
   size = new Vector3(32, 32, 32)
-  createCanvasSprite origin, size, ({originOffset, ctx, canvas}) ->
+  createCanvasSprite origin, size, ({originOffset, ctx, canvas, t}) ->
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
     #canvas.style.border = '1px solid red'
     ctx.strokeStyle = '#fff'
     ctx.fillStyle = '#444'
+
+    zero = new Vector3(0, 0, 0)
+    centerTopFront = new Vector3(0, size.y, 0)
+    centerTopBack = new Vector3(size.x, size.y, size.z)
+    bottomX = new Vector3(size.x, 0, 0)
+    bottomZ = new Vector3(0, 0, size.z)
+    topX = new Vector3(size.x, size.y, 0)
+    topZ = new Vector3(0, size.y, size.z)
+
+    onAxis = 'x'
+    offAxis = 'z'
+    legsBottomFront = [
+      getFoot(t, size, onAxis, offAxis, [0.2, 0.1, 0.0]),
+      getFoot(t, size, onAxis, offAxis, [0.4, 0.1, 0.25]),
+      getFoot(t, size, onAxis, offAxis, [0.6, 0.1, 0.5]),
+      getFoot(t, size, onAxis, offAxis, [0.8, 0.1, 0.75]),
+    ]
+    legsTopFront = [
+      getKnee(t, size, onAxis, offAxis, [0.35, 0.1, 0.5]),
+      getKnee(t, size, onAxis, offAxis, [0.45, 0.1, 0.75]),
+      getKnee(t, size, onAxis, offAxis, [0.55, 0.1, 0.0]),
+      getKnee(t, size, onAxis, offAxis, [0.64, 0.1, 0.25]),
+    ]
+
+    legsBottomBack = [
+      getFoot(t, size, onAxis, offAxis, [0.2, 0.9, 0.5]),
+      getFoot(t, size, onAxis, offAxis, [0.4, 0.9, 0.75]),
+      getFoot(t, size, onAxis, offAxis, [0.6, 0.9, 0.0]),
+      getFoot(t, size, onAxis, offAxis, [0.8, 0.9, 0.25]),
+    ]
+    legsTopBack = [
+      getKnee(t, size, onAxis, offAxis, [0.35, 0.9, 0.0]),
+      getKnee(t, size, onAxis, offAxis, [0.45, 0.9, 0.25]),
+      getKnee(t, size, onAxis, offAxis, [0.55, 0.9, 0.5]),
+      getKnee(t, size, onAxis, offAxis, [0.65, 0.9, 0.75]),
+    ]
+
+    ctx.strokeWidth = 1
+    for legPos in legsBottomBack
+      drawCircleStroke(ctx, originOffset, legPos, 1)
+    for kneePos in legsTopBack
+      drawCircleStroke(ctx, originOffset, kneePos, 1)
+    for [legPos, kneePos] in _.zip(legsTopBack, legsBottomBack)
+      drawLine(ctx, originOffset, legPos, kneePos)
+
     ctx.strokeWidth = 2
-
-    transform = (v) -> world3ToWorld2(v).add(originOffset)
-
-    zero = transform new Vector3(0, 0, 0)
-    centerTopFront = transform new Vector3(0, size.y, 0)
-    centerTopBack = transform new Vector3(size.x, size.y, size.z)
-    bottomX = transform new Vector3(size.x, 0, 0)
-    bottomZ = transform new Vector3(0, 0, size.z)
-    topX = transform new Vector3(size.x, size.y, 0)
-    topZ = transform new Vector3(0, size.y, size.z)
-
     center = topX.add(topZ).add(bottomX).add(bottomZ).multiply(1/4)
-    r = (bottomX.x - bottomZ.x) / 2 * 0.5
+    drawCircleFill(ctx, originOffset, center, 14)
+    drawCircleStroke(ctx, originOffset, center, 14)
 
-    ctx.beginPath()
-    ctx.arc(center.x, center.y, r, 0, Math.PI * 2, false)
-    ctx.fill()
-    ctx.beginPath()
-    ctx.arc(center.x, center.y, r, 0, Math.PI * 2, false)
-    ctx.stroke()
+    ctx.strokeWidth = 1
+    for legPos in legsBottomFront
+      drawCircleStroke(ctx, originOffset, legPos, 1)
+    for kneePos in legsTopFront
+      drawCircleStroke(ctx, originOffset, kneePos, 1)
+    for [legPos, kneePos] in _.zip(legsTopFront, legsBottomFront)
+      drawLine(ctx, originOffset, legPos, kneePos)
 
 
 playerSprite = null
@@ -140,6 +217,7 @@ applySprites = (state, t, dt) ->
     addInitialSprites()
 
   playerSprite.origin = state.playerPos
+  playerSprite.redraw(t)
   sortSprites()
   for sprite in sprites
     p = world3ToWorld2(sprite.origin)

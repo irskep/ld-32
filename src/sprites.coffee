@@ -19,9 +19,11 @@ createCanvasSprite = (origin, size, draw) ->
   canvas.style.width = "#{size2.x}px"
   canvas.style.height = "#{size2.y}px"
   ctx = canvas.getContext('2d')
-  draw({originOffset, ctx, canvas})
 
-  {origin, originOffset, size, el: canvas, id: _.uniqueId()}
+  redraw = (t) -> draw({originOffset, ctx, canvas, t})
+  redraw(0)
+
+  {origin, originOffset, size, el: canvas, id: _.uniqueId(), redraw}
 
 
 module.exports = {createCanvasSprite}

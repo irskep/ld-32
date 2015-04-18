@@ -13,10 +13,10 @@ applyInput = (state, t, dt) ->
   dt /= 1000  # in seconds, please
 
   dPlayerPos = new Vector3(0, 0, 0)
-  if getIsKeyDown('playerLeft') then dPlayerPos.z += 300 * dt
-  if getIsKeyDown('playerRight') then dPlayerPos.z -= 300 * dt
-  if getIsKeyDown('playerUp') then dPlayerPos.x += 300 * dt
-  if getIsKeyDown('playerDown') then dPlayerPos.x -= 300 * dt
+  if getIsKeyDown('playerLeft') then dPlayerPos.z += 100 * dt
+  if getIsKeyDown('playerRight') then dPlayerPos.z -= 100 * dt
+  if getIsKeyDown('playerUp') then dPlayerPos.x += 100 * dt
+  if getIsKeyDown('playerDown') then dPlayerPos.x -= 100 * dt
   state.playerPos = state.playerPos.add(dPlayerPos)
 
   dCameraPos = new Vector2(0, 0)
