@@ -1,7 +1,9 @@
 {world3ToWorld2} = require './projection'
 {createCanvasSprite} = require './sprites'
-{Vector3, Vector2} = require './geometry'
-sprites = []
+{Vector3} = require './geometry'
+isInFront = require './isInFront'
+
+sprites = window.sprites = []
 
 spriteRootEl = document.querySelectorAll('#sprite-root')[0]
 
@@ -29,6 +31,12 @@ drawPolygon = (ctx, originOffset, points) ->
 addSprite = (sprite) ->
   spriteRootEl.appendChild(sprite.el)
   sprites.push sprite
+
+
+sortSprites = ->
+  sprites.sort (a, b) -> if isInFront(a, b) then 1 else -1
+  _.each sprites, (s, i) ->
+    s.el.style.zIndex = i
 
 
 getGridSprite = (cellSize, numCells) ->
@@ -91,14 +99,15 @@ getBoxSprite = (origin, size) ->
 addInitialSprites = ->
   addSprite getGridSprite(32, 16)
   for x in [0..5]
-    addSprite getBoxSprite(new Vector3(32 - x * 32, 0, 32), new Vector3(32, 28, 32))
+    addSprite getBoxSprite(new Vector3(x * 32, 0, 32), new Vector3(32, 28, 32))
 
 
 applySprites = (state, t, dt) ->
   unless sprites.length
     addInitialSprites()
+  sortSprites()
   for sprite in sprites
-    p = world3ToWorld2(sprite.originPosition)
+    p = world3ToWorld2(sprite.origin)
       .subtract(sprite.originOffset)
       .add(SIZE.multiply(1/2))
       .subtract(state.cameraPos)
