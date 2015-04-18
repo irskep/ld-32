@@ -17,21 +17,24 @@ spriteRoot.style.width = SIZE.x + 'px'
 spriteRoot.style.height = SIZE.y + 'px'
 
 
-createInitialGridEntityState = (x, z) ->
-  origin: new Vector3(x * 32, 0, z * 32)
-  targetCell: new Vector3(x, 0, z)
-  direction: new Vector3(1, 0, 0)
-  id: _.uniqueId()
+createInitialGridEntityState = (x, z, extra={}) ->
+  _.extend extra, {
+    origin: new Vector3(x * 32, 0, z * 32)
+    targetCell: new Vector3(x, 0, z)
+    direction: new Vector3(1, 0, 0)
+    id: _.uniqueId()
+  }
+
 
 state = {
   boardSize: new Vector3(16, 0, 16)
   cameraPos: new Vector2(0, 0)
   player: createInitialGridEntityState(8, 8)
   npcs: [
-    createInitialGridEntityState(0, 0),
-    createInitialGridEntityState(15, 15),
-    createInitialGridEntityState(0, 15),
-    createInitialGridEntityState(15, 0),
+    createInitialGridEntityState(0, 0, {team: 1, color: '#822'}),
+    createInitialGridEntityState(15, 15, {team: 1, color: '#822'}),
+    createInitialGridEntityState(0, 15, {team: 2, color: '#228'}),
+    createInitialGridEntityState(15, 0, {team: 2, color: '#228'}),
   ]
 }
 

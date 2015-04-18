@@ -146,7 +146,7 @@ getFoot = (t, size, onAxis, offAxis, isReversed, isMoving, [onAxisFraction, offA
   if isMoving then pos.add getCircleVector(onAxis, 'y', 2, angle) else pos
 
 
-getBugSprite = (initialState, fillColor='#444') ->
+getBugSprite = (initialState, fillColor='#444', r=14) ->
   size = new Vector3(32, 32, 32)
   createCanvasSprite initialState, initialState.origin, size, ({originOffset, ctx, canvas, t, state}) ->
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -163,6 +163,7 @@ getBugSprite = (initialState, fillColor='#444') ->
     topZ = new Vector3(0, size.y, size.z)
 
     middle = topX.add(topZ).add(bottomX).add(bottomZ).multiply(1/4)
+    middle.y -= (14 - r) * 1.5
 
     isMoving = !!state?.isMoving
     onAxis = null
@@ -218,8 +219,8 @@ getBugSprite = (initialState, fillColor='#444') ->
       drawLine(ctx, originOffset, kneePos, jointPos)
 
     ctx.strokeWidth = 2
-    drawCircleFill(ctx, originOffset, middle, 14)
-    drawCircleStroke(ctx, originOffset, middle, 14)
+    drawCircleFill(ctx, originOffset, middle, r)
+    drawCircleStroke(ctx, originOffset, middle, r)
 
     ctx.strokeWidth = 1
     for legPos in legsFront
@@ -237,10 +238,10 @@ addInitialSprites = (state) ->
   #for x in [0..5]
   #  addSprite getBoxSprite(new Vector3(x * 32, 0, 32), new Vector3(32, 28, 32))
 
-  addSprite(getBugSprite(state.player, '#444'), state.player)
+  addSprite(getBugSprite(state.player, '#444', 14), state.player)
 
   for npcState in state.npcs
-    addSprite(getBugSprite(npcState, '#822'), npcState)
+    addSprite(getBugSprite(npcState, npcState.color, 10), npcState)
 
 
 applySprites = (state, t, dt) ->
