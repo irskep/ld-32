@@ -12,7 +12,7 @@ applyReact = require './applyReact'
 applySprites = require './applySprites'
 
 window.SIZE = new Vector2(700, 500)
-window.CELL_SIZE = 32
+window.CELL_SIZE = 20
 window.PLAYER_SPEED = window.CELL_SIZE * (100 / 32)
 window.NPC_SPEED = window.CELL_SIZE * (80 / 32)
 

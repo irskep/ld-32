@@ -7,6 +7,17 @@ window.requestAnimationFrame = (
   window.webkitRequestAnimationFrame ||
   window.oRequestAnimationFrame);
 
+_.sum = (values, fn) ->
+  total = 0
+  if _.isArray(values)
+    for value in values
+      total += (if fn then fn(value) else value)
+  else
+    for key of values
+      total += (if fn then fn(values[key]) else values[key])
+  total
+
+
 _.choice = (options, weights = null, totalWeight = null) ->
   return null unless options?.length
   return options[_.random(0, options.length - 1)] unless weights

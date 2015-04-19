@@ -12,10 +12,10 @@ createInitialGridEntityState = (x, z, extra={}) ->
   }
 
 
-createBugA = (x, z) -> createInitialGridEntityState x, z, {type: 'A'}
-createBugB = (x, z) -> createInitialGridEntityState x, z, {type: 'B'}
-createBugC = (x, z) -> createInitialGridEntityState x, z, {type: 'C'}
-createBugD = (x, z) -> createInitialGridEntityState x, z, {type: 'D'}
+createBugA = (x, z) -> createInitialGridEntityState x, z, {type: 'A', cellVisits: {}}
+createBugB = (x, z) -> createInitialGridEntityState x, z, {type: 'B', cellVisits: {}}
+createBugC = (x, z) -> createInitialGridEntityState x, z, {type: 'C', cellVisits: {}}
+createBugD = (x, z) -> createInitialGridEntityState x, z, {type: 'D', cellVisits: {}}
 
 
 module.exports = stateFactories =
@@ -37,6 +37,6 @@ module.exports = stateFactories =
     npcs: [
       createBugA(0, 0),
       createBugB(w-1, h-1),
-      createBugC(0, h-1),
-      createBugD(w-1, 0),
+      #createBugC(0, h-1),
+      #createBugD(w-1, 0),
     ]

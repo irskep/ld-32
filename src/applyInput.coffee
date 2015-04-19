@@ -22,6 +22,55 @@ BUG TYPES
   * Must be thrown into black hole
 ###
 
+
+getWeightedDirection = (state, pos, directions, getWeight) ->
+
+
+chooseNPCDirection = (state, entityState, validAdjacentDirections) ->
+  playerPos = state.player.targetCell
+  entityPos = entityState.targetCell
+
+  switch entityState.type
+    when 'A'
+      # if we see the player, beeline
+      # (walls, whatever)
+      if playerPos.x == entityPos.x
+        if playerPos.z > entityPos.z and getCanBeelineToCell(state, entityPos, playerPos, new Vector3(0, 0, 1))
+          return new Vector3(0, 0, 1)
+        if playerPos.z < entityPos.z and getCanBeelineToCell(state, entityPos, playerPos, new Vector3(0, 0, -1))
+          return new Vector3(0, 0, -1)
+      if playerPos.z == entityPos.z
+        if playerPos.x > entityPos.x and getCanBeelineToCell(state, entityPos, playerPos, new Vector3(1, 0, 0))
+          return new Vector3(1, 0, 0)
+        if playerPos.x < entityPos.x and getCanBeelineToCell(state, entityPos, playerPos, new Vector3(-1, 0, 0))
+          return new Vector3(-1, 0, 0)
+
+      maxVisits = 0
+      sortedDirections = _.sortBy validAdjacentDirections, (d) ->
+        p = entityPos.add(d)
+        entityState.cellVisits["#{p.x},#{p.y}"] ?= 0
+        visits = entityState.cellVisits["#{p.x},#{p.y}"]
+        maxVisits = Math.max(maxVisits, visits)
+        -visits
+      weights = _.map sortedDirections, (d, i) ->
+        p = entityPos.add(d)
+        maxVisits + 1 - entityState.cellVisits["#{p.x},#{p.y}"]
+      return _.choice sortedDirections, weights
+    when 'B'
+      directionsILike = _.filter validAdjacentDirections, (d) ->
+        not entityPos.add(d).isEqual(playerPos)
+      if directionsILike.length == 0
+        _.choice validAdjacentDirections
+
+      currentDistFromPlayer = playerPos.subtract(entityPos).getLength()
+      weights = _.map directionsILike, (d) ->
+        if playerPos.subtract(entityPos.add(d)).getLength() < currentDistFromPlayer
+          return 1  # closer :-(
+        else
+          return 4  # farther away :-)
+      return _.choice directionsILike, weights
+
+
 getCellOrigin = (cellPos) -> cellPos.multiply(window.CELL_SIZE)
 
 getCirclePos = (t, period=1000, radius=256) ->
@@ -30,7 +79,13 @@ getCirclePos = (t, period=1000, radius=256) ->
   angle = Math.PI * 2 * progress
   new Vector2(Math.cos(angle) / 2 * 256, Math.sin(angle) / 2 * 256)
 
-getCanWalkToCell = ({boardSize, player, npcs, walls}, cellPos) ->
+getCanBeelineToCell = (state, from, to, stepVector) ->
+  while true
+    return true if from.isEqual(to)
+    from = from.add(stepVector)
+    return false unless getIsCellWalkable(state, from)
+
+getIsCellWalkable = ({boardSize, player, npcs, walls}, cellPos) ->
   return false if "#{cellPos.x},#{cellPos.z}" of walls
   return false if cellPos.x < 0
   return false if cellPos.z < 0
@@ -67,7 +122,7 @@ getNextPlayerState = (state, entityState, t, dt) ->
       ['playerDown', new Vector3(-1, 0, 0)],
     ]
     for [keyName, directionVector] in inputs
-      if getIsKeyDown(keyName) and getCanWalkToCell(state, fromCell.add directionVector)
+      if getIsKeyDown(keyName) and getIsCellWalkable(state, fromCell.add directionVector)
         entityState.targetCell = fromCell.add directionVector
         entityState.direction = directionVector
         entityState.isMoving = true
@@ -87,10 +142,13 @@ mutateNPCState = (state, entityState, t, dt) ->
   if canChangeTargetCell
     fromCell = entityState.targetCell
     directions = _.filter DIRECTIONS, (d) ->
-      getCanWalkToCell(state, fromCell.add(d))
-    nextDirection = _.choice directions
+      getIsCellWalkable(state, fromCell.add(d))
+    nextDirection = chooseNPCDirection(state, entityState, directions)
     entityState.targetCell = fromCell.add nextDirection
     entityState.direction = nextDirection
+    {x, z} = entityState.targetCell
+    entityState.cellVisits["#{x},#{z}"] ?= 0
+    entityState.cellVisits["#{x},#{z}"] += 1
 
   entityState.isMoving = true  # always moving
   entityState
