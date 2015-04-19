@@ -10,7 +10,7 @@ applyInput = require './applyInput'
 applyReact = require './applyReact'
 applySprites = require './applySprites'
 
-window.SIZE = new Vector2(600, 700)
+window.SIZE = new Vector2(600, 400)
 
 spriteRoot = document.querySelectorAll('#sprite-root')[0]
 spriteRoot.style.width = SIZE.x + 'px'
@@ -33,7 +33,15 @@ getWalls = (listOfXZPairs) ->
   walls
 
 
-state = {
+getSplash = -> {
+  isTitleScreenVisible: true
+  isGridVisible: false
+  cameraPos: new Vector2(0, 0)
+}
+
+
+getLevel1 = -> {
+  isGridVisible: true
   boardSize: new Vector3(16, 0, 16)
   cameraPos: new Vector2(0, 0)
   player: createInitialGridEntityState(8, 8)
@@ -45,6 +53,9 @@ state = {
     createInitialGridEntityState(15, 0, {team: 2, color: '#228'}),
   ]
 }
+
+
+state = getSplash()
 
 
 ### it's run time! ###

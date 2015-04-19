@@ -237,28 +237,35 @@ getBugSprite = (initialState, fillColor='#444', r=14) ->
 
 
 addInitialSprites = (state) ->
-  addSprite getGridSprite(null, 32, state.boardSize)
-  _.each state.walls, (wallCell) ->
-    addSprite getBoxSprite(null, getCellOrigin(wallCell), new Vector3(32, 16, 32))
+  if state.isGridVisible
+    addSprite getGridSprite(null, 32, state.boardSize)
 
-  addSprite(getBugSprite(state.player, '#444', 14), state.player)
+  if state.walls?
+    _.each state.walls, (wallCell) ->
+      addSprite getBoxSprite(null, getCellOrigin(wallCell), new Vector3(32, 16, 32))
 
-  for npcState in state.npcs
-    addSprite(getBugSprite(npcState, npcState.color, 10), npcState)
+  if state.player?
+    addSprite(getBugSprite(state.player, '#444', 14), state.player)
+
+  if state.npcs?
+    for npcState in state.npcs
+      addSprite(getBugSprite(npcState, npcState.color, 10), npcState)
 
 
 applySprites = (state, t, dt) ->
   unless sprites.length
     addInitialSprites(state)
 
-  playerSprite = spriteIdToSprite[entityIdToSpriteId[state.player.id]]
-  playerSprite.origin = state.player.origin
-  playerSprite.redraw(t, state.player)
+  if state.player?
+    playerSprite = spriteIdToSprite[entityIdToSpriteId[state.player.id]]
+    playerSprite.origin = state.player.origin
+    playerSprite.redraw(t, state.player)
 
-  for npcState in state.npcs
-    sprite = spriteIdToSprite[entityIdToSpriteId[npcState.id]]
-    sprite.origin = npcState.origin
-    sprite.redraw(t, npcState)
+  if state.npcs?
+    for npcState in state.npcs
+      sprite = spriteIdToSprite[entityIdToSpriteId[npcState.id]]
+      sprite.origin = npcState.origin
+      sprite.redraw(t, npcState)
 
   sortSprites()
   for sprite in sprites

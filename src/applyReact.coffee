@@ -1,9 +1,6 @@
 {Vector3} = require './geometry'
 {world3ToWorld2} = require './projection'
 
-svgUtils =
-  translate: ({x, y}) -> "translate(#{x}, #{y})"
-
 ReactUpdates = require('react/lib/ReactUpdates')
 injectBatchingStrategy = ReactUpdates.injection.injectBatchingStrategy
 injectBatchingStrategy(
@@ -11,33 +8,108 @@ injectBatchingStrategy(
   batchedUpdates: (callback, args...) -> callback(args...)
 )
 
-reactRootEl = document.querySelectorAll('#react-root')[0]
+COLORS = [
+  '#f00',
+  '#f80',
+  '#ff0',
+  '#8f0',
+  '#0f0',
+  '#0f8',
+  '#0ff',
+  '#08f',
+  '#00f',
+  '#80f',
+  '#f0f',
+  '#f08',
+]
+
+###
+.outline-text {
+  color: #000;
+  text-shadow:
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
+    1px 1px 0 #fff;
+}
+###
+
+
+RainbowOutline = React.createClass
+  displayName: 'RainbowOutline'
+  render: ->
+    <span>
+      {_.map @props.children, (char, i) ->
+        color = COLORS[i % COLORS.length]
+        <span
+            style={{
+              color: '#000'
+              textShadow: (
+                "-1px -1px 0 #{color}," +
+                "1px -1px 0 #{color}," +
+                "-1px 1px 0 #{color}," +
+                "1px 1px 0 #{color};")
+            }}>
+          {char}
+        </span>
+      }
+    </span>
+
+
+Rainbow = React.createClass
+  displayName: 'Rainbow'
+  render: ->
+    <span>
+      {_.map @props.children, (char, i) ->
+        color = COLORS[i % COLORS.length]
+        <span style={{color}}>{char}</span>
+      }
+    </span>
+
+
+Spin = React.createClass
+  displayName: 'Spin'
+  render: ->
+    <span className="spin">{@props.children}</span>
+
+
+TitleScreen = React.createClass
+  displayName: 'TitleScreen'
+  render: ->
+    <div>
+      <div style={{fontSize: '96px'}}>
+        <RainbowOutline>Scuttlebug</RainbowOutline>
+      </div>
+      <div>
+        <Rainbow>
+          <span>&uarr;</span>
+          <span>&rarr;</span>
+          <span>&darr;</span>
+          <span>&larr;</span>
+          <span> </span><span />
+          <span>&lt;space&gt;</span></Rainbow>
+      </div>
+      <div style={{marginTop: 64, fontSize: '72px'}}>
+        <a style={{cursor: 'pointer'}} onClick={-> console.log 'go'}>
+          <RainbowOutline>
+            G<Spin>O</Spin>
+          </RainbowOutline>
+        </a>
+      </div>
+    </div>
+
 Root = React.createClass
   displayName: 'Root'
   render: ->
-    LINES = [
-      {x1: -1, z1: -1, x2: -1, z2: 1, color: '#f00'},
-      {x1: -1, z1: 1, x2: 1, z2: 1, color: '#ff0'},
-      {x1: 1, z1: 1, x2: 1, z2: -1, color: '#0f0'},
-      {x1: 1, z1: -1, x2: -1, z2: -1, color: '#0ff'},
-    ]
-    transform = svgUtils.translate(
-      SIZE.multiply(1/2).subtract(this.props.state.cameraPos))
-    <svg width={SIZE.x} height={SIZE.y} viewBox={"0 0 #{SIZE.x} #{SIZE.y}"}
-        style={{border: "1px solid white;"}}>
-      <g transform={transform}>
-        {_.map LINES, ({x1, z1, x2, z2, color}) ->
-          p1 = world3ToWorld2(new Vector3(x1 * 100, 0, z1 * 100))
-          p2 = world3ToWorld2(new Vector3(x2 * 100, 0, z2 * 100))
-          <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={color}
-            strokeWidth="2"/>
-        }
-      </g>
-    </svg>
+    state = @props.state
+    <div style={{width: window.SIZE.x, height: window.SIZE.y, textAlign: 'center'}}>
+      {state.isTitleScreenVisible && <TitleScreen />}
+    </div>
 
 
+reactRootEl = document.querySelectorAll('#react-root')[0]
 applyReact = (state, t, dt) ->
-  #React.renderComponent(<Root state={state} />, reactRootEl)
+  React.renderComponent(<Root state={state} />, reactRootEl)
   ReactUpdates.flushBatchedUpdates()
   state
 

@@ -83,11 +83,13 @@ mutateNPCState = (state, entityState, t, dt) ->
 applyInput = (state, t, dt) ->
   dt /= 1000  # in seconds, please
 
-  state.player = getNextPlayerState(state, state.player, t, dt)
-  state.cameraPos = world3ToWorld2(state.player.origin)
+  if state.player?
+    state.player = getNextPlayerState(state, state.player, t, dt)
+    state.cameraPos = world3ToWorld2(state.player.origin)
 
-  for npcState in state.npcs
-    mutateNPCState(state, npcState, t, dt)
+  if state.player?
+    for npcState in state.npcs
+      mutateNPCState(state, npcState, t, dt)
 
   keyboard.markKeyCheckpoint()
   state

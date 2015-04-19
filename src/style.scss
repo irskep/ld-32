@@ -9,11 +9,13 @@ canvas.sprite {
   position: absolute;
 }
 
+#root-root {
+  top: 200px;
+}
+
 #sprite-root, #react-root, #root-root {
   position: absolute;
   overflow: visible;
-  top: 0;
-  left: 0;
 }
 
 #sprite-root {
@@ -28,4 +30,37 @@ canvas.sprite {
   background: -o-linear-gradient(90deg, $topColor 0%, $bottomColor 100%);
   background: -ms-linear-gradient(90deg, $topColor 0%, $bottomColor 100%);
   background: linear-gradient(180deg, $topColor 0%, $bottomColor 100%);
+}
+
+@-moz-keyframes spin {
+    from { -moz-transform: rotate(0deg); }
+    to { -moz-transform: rotate(360deg); }
+}
+@-webkit-keyframes spin {
+    from { -webkit-transform: rotate(0deg); }
+    to { -webkit-transform: rotate(360deg); }
+}
+@keyframes spin {
+    from {transform:rotate(0deg);}
+    to {transform:rotate(360deg);}
+}
+
+.spin {
+    -webkit-animation-name: spin;
+    -webkit-animation-duration: 2000ms;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: linear;
+    -moz-animation-name: spin;
+    -moz-animation-duration: 2000ms;
+    -moz-animation-iteration-count: infinite;
+    -moz-animation-timing-function: linear;
+    -ms-animation-name: spin;
+    -ms-animation-duration: 2000ms;
+    -ms-animation-iteration-count: infinite;
+    -ms-animation-timing-function: linear;
+
+    animation-name: spin;
+    animation-duration: 2000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
 }
