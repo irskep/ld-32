@@ -8,6 +8,9 @@ sprites = window.sprites = []
 spriteRootEl = document.querySelectorAll('#sprite-root')[0]
 
 
+getCellOrigin = (cellPos) -> cellPos.multiply(32)
+
+
 drawLine = (ctx, originOffset, point3A, point3B) ->
   ctx.beginPath()
   point1 = world3ToWorld2(point3A).add(originOffset)
@@ -235,8 +238,8 @@ getBugSprite = (initialState, fillColor='#444', r=14) ->
 
 addInitialSprites = (state) ->
   addSprite getGridSprite(null, 32, state.boardSize)
-  #for x in [0..5]
-  #  addSprite getBoxSprite(new Vector3(x * 32, 0, 32), new Vector3(32, 28, 32))
+  _.each state.walls, (wallCell) ->
+    addSprite getBoxSprite(null, getCellOrigin(wallCell), new Vector3(32, 16, 32))
 
   addSprite(getBugSprite(state.player, '#444', 14), state.player)
 

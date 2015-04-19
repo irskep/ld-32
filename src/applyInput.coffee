@@ -11,7 +11,8 @@ getCirclePos = (t, period=1000, radius=256) ->
   angle = Math.PI * 2 * progress
   new Vector2(Math.cos(angle) / 2 * 256, Math.sin(angle) / 2 * 256)
 
-getIsCellAvailable = ({boardSize, player, npcs}, cellPos) ->
+getCanWalkToCell = ({boardSize, player, npcs, walls}, cellPos) ->
+  return false if "#{cellPos.x},#{cellPos.z}" of walls
   return false if cellPos.x < 0
   return false if cellPos.z < 0
   return false if cellPos.x >= boardSize.x
@@ -50,7 +51,7 @@ getNextPlayerState = (state, entityState, t, dt) ->
       ['playerDown', new Vector3(-1, 0, 0)],
     ]
     for [keyName, directionVector] in inputs
-      if getIsKeyDown(keyName) and getIsCellAvailable(state, fromCell.add directionVector)
+      if getIsKeyDown(keyName) and getCanWalkToCell(state, fromCell.add directionVector)
         entityState.targetCell = fromCell.add directionVector
         entityState.direction = directionVector
         entityState.isMoving = true
@@ -70,7 +71,7 @@ mutateNPCState = (state, entityState, t, dt) ->
   if canChangeTargetCell
     fromCell = entityState.targetCell
     directions = _.filter DIRECTIONS, (d) ->
-      getIsCellAvailable(state, fromCell.add(d))
+      getCanWalkToCell(state, fromCell.add(d))
     nextDirection = _.choice directions
     entityState.targetCell = fromCell.add nextDirection
     entityState.direction = nextDirection

@@ -26,10 +26,18 @@ createInitialGridEntityState = (x, z, extra={}) ->
   }
 
 
+getWalls = (listOfXZPairs) ->
+  walls = {}
+  for [x, z] in listOfXZPairs
+    walls["#{x},#{z}"] = new Vector3(x, 0, z)
+  walls
+
+
 state = {
   boardSize: new Vector3(16, 0, 16)
   cameraPos: new Vector2(0, 0)
   player: createInitialGridEntityState(8, 8)
+  walls: getWalls([[9, 10], [10, 10], [11, 10], [12, 10], [13, 10]])
   npcs: [
     createInitialGridEntityState(0, 0, {team: 1, color: '#822'}),
     createInitialGridEntityState(15, 15, {team: 1, color: '#822'}),
