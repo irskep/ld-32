@@ -3,7 +3,7 @@
 
 spriteIdToSprite = {}
 
-createCanvasSprite = (initialState, origin, size, draw) ->
+createCanvasSprite = (layer, initialState, origin, size, draw) ->
   canvas = document.createElement('canvas')
   sizePoints = [
     new Vector3(0, 0, 0),
@@ -25,7 +25,7 @@ createCanvasSprite = (initialState, origin, size, draw) ->
   redraw = (t, state) -> draw({originOffset, ctx, canvas, t, state})
   redraw(0, initialState)
 
-  sprite = {origin, originOffset, size, el: canvas, id: _.uniqueId(), redraw}
+  sprite = {origin, originOffset, size, el: canvas, id: _.uniqueId(), redraw, layer}
   spriteIdToSprite[sprite.id] = sprite
   sprite
 

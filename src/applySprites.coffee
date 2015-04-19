@@ -8,7 +8,7 @@ sprites = window.sprites = []
 spriteRootEl = document.querySelectorAll('#sprite-root')[0]
 
 
-getCellOrigin = (cellPos) -> cellPos.multiply(32)
+getCellOrigin = (cellPos) -> cellPos.multiply(window.CELL_SIZE)
 
 
 drawLine = (ctx, originOffset, point3A, point3B) ->
@@ -54,6 +54,13 @@ addSprite = (sprite, entity=null) ->
 
 sortSprites = ->
   sprites.sort (a, b) -> if isInFront(a, b) then 1 else -1
+  ###
+  sprites.sort (a, b) ->
+    return -1 if a.layer < b.layer
+    return 1 if a.origin.x < b.origin.x
+    return 1 if a.origin.z < b.origin.z
+    return -1
+  ###
   _.each sprites, (s, i) ->
     s.el.style.zIndex = i
 
@@ -68,7 +75,7 @@ getCircleVector = (axis1, axis2, radius, angle) ->
 getGridSprite = (state, cellSize, boardSize) ->
   s = new Vector3(boardSize.x, 0, boardSize.z).multiply(cellSize)
 
-  createCanvasSprite null, new Vector3(0, 0, 0), s, ({originOffset, ctx, canvas}) ->
+  createCanvasSprite null, -1, new Vector3(0, 0, 0), s, ({originOffset, ctx, canvas}) ->
     #canvas.style.border = '1px solid red'
     ctx.strokeStyle = '#aaa'
 
@@ -83,10 +90,11 @@ getGridSprite = (state, cellSize, boardSize) ->
       z += cellSize
 
 
-getBoxSprite = (state, origin, size) ->
-  createCanvasSprite state, origin, size, ({originOffset, ctx, canvas}) ->
+getBoxSprite = (state, origin, size, stroke, fill) ->
+  createCanvasSprite 0, state, origin, size, ({originOffset, ctx, canvas}) ->
     #canvas.style.border = '1px solid red'
-    ctx.strokeStyle = '#afa'
+    ctx.strokeStyle = stroke
+    ctx.fillStyle = fill
     ctx.strokeWidth = 2
 
     zero = new Vector3(0, 0, 0)
@@ -97,7 +105,6 @@ getBoxSprite = (state, origin, size) ->
     topX = new Vector3(size.x, size.y, 0)
     topZ = new Vector3(0, size.y, size.z)
 
-    ctx.fillStyle = 'black'
     drawPolygon ctx, originOffset, [
       zero, bottomX, topX, centerTopBack, topZ, bottomZ
     ]
@@ -150,8 +157,8 @@ getFoot = (t, size, onAxis, offAxis, isReversed, isMoving, [onAxisFraction, offA
 
 
 getBugSprite = (initialState, fillColor='#444', r=14) ->
-  size = new Vector3(32, 32, 32)
-  createCanvasSprite initialState, initialState.origin, size, ({originOffset, ctx, canvas, t, state}) ->
+  size = new Vector3(window.CELL_SIZE, window.CELL_SIZE, window.CELL_SIZE)
+  createCanvasSprite 0, initialState, initialState.origin, size, ({originOffset, ctx, canvas, t, state}) ->
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     #canvas.style.border = '1px solid red'
     ctx.strokeStyle = '#fff'
@@ -166,7 +173,7 @@ getBugSprite = (initialState, fillColor='#444', r=14) ->
     topZ = new Vector3(0, size.y, size.z)
 
     middle = topX.add(topZ).add(bottomX).add(bottomZ).multiply(1/4)
-    middle.y -= (14 - r) * 1.5
+    middle.y -= (window.CELL_SIZE * (14 / 32) - r) * 1.5
 
     isMoving = !!state?.isMoving
     onAxis = null
@@ -236,20 +243,25 @@ getBugSprite = (initialState, fillColor='#444', r=14) ->
       drawLine(ctx, originOffset, kneePos, jointPos)
 
 
+bugTypeToColor =
+  A: '#f00'
+  B: '#ff0'
+  C: '#0ff'
+  D: '#f0f'
 addInitialSprites = (state) ->
   if state.isGridVisible
-    addSprite getGridSprite(null, 32, state.boardSize)
+    addSprite getGridSprite(null, window.CELL_SIZE, state.boardSize)
 
   if state.walls?
     _.each state.walls, (wallCell) ->
-      addSprite getBoxSprite(null, getCellOrigin(wallCell), new Vector3(32, 16, 32))
+      addSprite getBoxSprite(null, getCellOrigin(wallCell), new Vector3(window.CELL_SIZE, window.CELL_SIZE / 4, window.CELL_SIZE), '#ff0', '#00f')
 
   if state.player?
-    addSprite(getBugSprite(state.player, '#444', 14), state.player)
+    addSprite(getBugSprite(state.player, '#444', window.CELL_SIZE * (14 / 32)), state.player)
 
   if state.npcs?
     for npcState in state.npcs
-      addSprite(getBugSprite(npcState, npcState.color, 10), npcState)
+      addSprite(getBugSprite(npcState, bugTypeToColor[npcState.type], window.CELL_SIZE * (10 / 32)), npcState)
 
 
 applySprites = (state, t, dt) ->

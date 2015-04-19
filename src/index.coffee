@@ -5,57 +5,20 @@ window.Bacon = require 'baconjs'
 require './util'
 
 {Vector2, Vector3} = require './geometry'
+stateFactories = require './stateFactories'
 
 applyInput = require './applyInput'
 applyReact = require './applyReact'
 applySprites = require './applySprites'
 
-window.SIZE = new Vector2(600, 400)
+window.SIZE = new Vector2(700, 500)
+window.CELL_SIZE = 32
+window.PLAYER_SPEED = window.CELL_SIZE * (100 / 32)
+window.NPC_SPEED = window.CELL_SIZE * (80 / 32)
 
 spriteRoot = document.querySelectorAll('#sprite-root')[0]
 spriteRoot.style.width = SIZE.x + 'px'
 spriteRoot.style.height = SIZE.y + 'px'
-
-
-createInitialGridEntityState = (x, z, extra={}) ->
-  _.extend extra, {
-    origin: new Vector3(x * 32, 0, z * 32)
-    targetCell: new Vector3(x, 0, z)
-    direction: new Vector3(1, 0, 0)
-    id: _.uniqueId()
-  }
-
-
-getWalls = (listOfXZPairs) ->
-  walls = {}
-  for [x, z] in listOfXZPairs
-    walls["#{x},#{z}"] = new Vector3(x, 0, z)
-  walls
-
-
-getSplash = -> {
-  isTitleScreenVisible: true
-  isGridVisible: false
-  cameraPos: new Vector2(0, 0)
-}
-
-
-getLevel1 = -> {
-  isGridVisible: true
-  boardSize: new Vector3(16, 0, 16)
-  cameraPos: new Vector2(0, 0)
-  player: createInitialGridEntityState(8, 8)
-  walls: getWalls([[9, 10], [10, 10], [11, 10], [12, 10], [13, 10]])
-  npcs: [
-    createInitialGridEntityState(0, 0, {team: 1, color: '#822'}),
-    createInitialGridEntityState(15, 15, {team: 1, color: '#822'}),
-    createInitialGridEntityState(0, 15, {team: 2, color: '#228'}),
-    createInitialGridEntityState(15, 0, {team: 2, color: '#228'}),
-  ]
-}
-
-
-state = getSplash()
 
 
 ### it's run time! ###
@@ -66,6 +29,8 @@ onAnimationFrame = (callback) ->
     window.requestAnimationFrame animationFrameCallback
   window.requestAnimationFrame animationFrameCallback
 
+
+state = stateFactories.level1()
 
 lastT = null
 onAnimationFrame (t) ->

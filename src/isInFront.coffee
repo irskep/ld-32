@@ -1,9 +1,13 @@
 {Vector3} = require './geometry'
+{world3ToWorld2} = require './projection'
 
 viewerNormal = new Vector3(-1, 0, -1)
 
 isInFront = (spriteA, spriteB) ->
-  #return spriteA.layer > spriteB.layer  if spriteA.layer isnt spriteB.layer
+  return spriteA.layer > spriteB.layer if spriteA.layer isnt spriteB.layer
+
+  return world3ToWorld2(spriteA.origin).y > world3ToWorld2(spriteB.origin).y
+
   minA = spriteA.origin
   minB = spriteB.origin
   maxA = spriteA.origin.add(spriteA.size)
@@ -18,10 +22,11 @@ isInFront = (spriteA, spriteB) ->
 
   # if flat objects at same y height don't intersect in x or z,
   # they don't _actually_ overlap, and thus aren't comparable
-  # TODO: do the same for flat x, flat z objects
   if not compareY and (maxA.x <= minB.x or maxA.x <= minB.x or
       maxA.z <= minB.z or maxA.z <= minB.z)
-    return null
+    # return a junk but stable value
+    return minA.x + minA.y > minB.x + minB.y
+    #return null
 
   return true if (compareY and minA.y >= maxB.y) or
     (compareX and maxA.x <= minB.x) or

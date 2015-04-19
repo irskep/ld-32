@@ -89,12 +89,15 @@ TitleScreen = React.createClass
           <span> </span><span />
           <span>&lt;space&gt;</span></Rainbow>
       </div>
-      <div style={{marginTop: 64, fontSize: '72px'}}>
-        <a style={{cursor: 'pointer'}} onClick={-> console.log 'go'}>
-          <RainbowOutline>
-            G<Spin>O</Spin>
-          </RainbowOutline>
-        </a>
+      <div style={{marginTop: 64}}>
+        <div>Press &lt;space&gt; to</div>
+        <div style={{fontSize: '72px'}}>
+          <a style={{cursor: 'pointer'}} onClick={-> console.log 'go'}>
+            <RainbowOutline>
+              G<Spin>O</Spin>
+            </RainbowOutline>
+          </a>
+        </div>
       </div>
     </div>
 

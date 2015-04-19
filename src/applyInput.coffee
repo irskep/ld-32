@@ -2,8 +2,27 @@
 keyboard = require './keyboard'
 {getIsKeyDown} = keyboard
 {world3ToWorld2} = require './projection'
+stateFactories = require './stateFactories'
 
-getCellOrigin = (cellPos) -> cellPos.multiply(32)
+
+###
+BUG TYPES
+* A
+  * Moves randomly
+  * If player is in line of sight, beeline
+  * Destroyed on contact with B
+* B
+  * Avoids player
+  * Destroyed on contact with A
+* C
+  * Stays near black holes
+  * Destroyed when black hole is full
+* D
+  * Stays near edges
+  * Must be thrown into black hole
+###
+
+getCellOrigin = (cellPos) -> cellPos.multiply(window.CELL_SIZE)
 
 getCirclePos = (t, period=1000, radius=256) ->
   period = 1000
@@ -17,9 +36,6 @@ getCanWalkToCell = ({boardSize, player, npcs, walls}, cellPos) ->
   return false if cellPos.z < 0
   return false if cellPos.x >= boardSize.x
   return false if cellPos.z >= boardSize.z
-  return false if player.targetCell.isEqual(cellPos)
-  for {targetCell} in npcs
-    return false if targetCell.isEqual(cellPos)
   return true
 
 
@@ -39,7 +55,7 @@ mutateGridEntityState = (speed, state, entityState, t, dt) ->
 
 
 getNextPlayerState = (state, entityState, t, dt) ->
-  canChangeTargetCell = mutateGridEntityState(100, state, entityState, t, dt)
+  canChangeTargetCell = mutateGridEntityState(window.PLAYER_SPEED, state, entityState, t, dt)
 
   # ^ may cascade
   if canChangeTargetCell
@@ -65,7 +81,7 @@ DIRECTIONS = [
 ]
 mutateNPCState = (state, entityState, t, dt) ->
   # TODO: leg animation speed should depend on entity speed
-  canChangeTargetCell = mutateGridEntityState(80, state, entityState, t, dt)
+  canChangeTargetCell = mutateGridEntityState(window.NPC_SPEED, state, entityState, t, dt)
 
   # ^ may cascade
   if canChangeTargetCell
@@ -82,6 +98,9 @@ mutateNPCState = (state, entityState, t, dt) ->
 
 applyInput = (state, t, dt) ->
   dt /= 1000  # in seconds, please
+
+  if state.isTitleScreenVisible and keyboard.getKeyPressesSinceLastCheckpoint('action') > 0
+    return stateFactories.level1()
 
   if state.player?
     state.player = getNextPlayerState(state, state.player, t, dt)

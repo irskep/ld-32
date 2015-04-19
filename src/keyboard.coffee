@@ -6,13 +6,8 @@ actionToKeyName =
   playerRight: 'right'
   playerUp: 'up'
   playerDown: 'down'
-  cameraLeft: 'a'
-  cameraRight: 'd'
-  cameraUp: 'w'
-  cameraDown: 's'
-  playerAction: 'space'
-  playerStabLeft: ','
-  playerStabRight: '.'
+  action: 'space'
+
 actionToKeyCode = _.objMap actionToKeyName, (name, key, dest) ->
   dest[key] = keyNameToCode[name]
 keyCodeToAction = _.invert(actionToKeyCode)
