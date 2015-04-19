@@ -142,7 +142,12 @@ mutateNPCState = (state, entityState, t, dt) ->
   if canChangeTargetCell
     fromCell = entityState.targetCell
     directions = _.filter DIRECTIONS, (d) ->
-      getIsCellWalkable(state, fromCell.add(d))
+      toCell = fromCell.add(d)
+      return false unless getIsCellWalkable(state, toCell)
+      for npcState in state.npcs
+        if npcState.targetCell.isEqual(toCell)
+          return false
+      return true
     nextDirection = chooseNPCDirection(state, entityState, directions)
     entityState.targetCell = fromCell.add nextDirection
     entityState.direction = nextDirection
@@ -162,7 +167,8 @@ applyInput = (state, t, dt) ->
 
   if state.player?
     state.player = getNextPlayerState(state, state.player, t, dt)
-    state.cameraPos = world3ToWorld2(state.player.origin)
+    #state.cameraPos = world3ToWorld2(state.player.origin)
+    state.cameraPos = world3ToWorld2(getCellOrigin(new Vector3(state.boardSize.x / 2, 0, state.boardSize.z / 2)))
 
   if state.player?
     for npcState in state.npcs
