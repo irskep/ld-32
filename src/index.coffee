@@ -15,6 +15,7 @@ window.SIZE = new Vector2(700, 500)
 window.CELL_SIZE = 32
 window.PLAYER_SPEED = window.CELL_SIZE * (100 / 32)
 window.NPC_SPEED = window.CELL_SIZE * (80 / 32)
+window.TONGUE_SPEED = window.CELL_SIZE * (500 / 32)
 
 spriteRoot = document.querySelectorAll('#sprite-root')[0]
 spriteRoot.style.width = SIZE.x + 'px'
@@ -30,6 +31,7 @@ onAnimationFrame = (callback) ->
   window.requestAnimationFrame animationFrameCallback
 
 
+#state = stateFactories.splash()
 state = stateFactories.level1()
 
 lastT = null

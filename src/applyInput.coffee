@@ -72,6 +72,11 @@ chooseNPCDirection = (state, entityState, validAdjacentDirections) ->
 
 
 getCellOrigin = (cellPos) -> cellPos.multiply(window.CELL_SIZE)
+getOriginCell = (origin) ->
+  new Vector3(
+    Math.floor(origin.x / window.CELL_SIZE),
+    0,
+    Math.floor(origin.z / window.CELL_SIZE))
 
 getCirclePos = (t, period=1000, radius=256) ->
   period = 1000
@@ -112,20 +117,55 @@ mutateGridEntityState = (speed, state, entityState, t, dt) ->
 getNextPlayerState = (state, entityState, t, dt) ->
   canChangeTargetCell = mutateGridEntityState(window.PLAYER_SPEED, state, entityState, t, dt)
 
+  if entityState.tongue
+    changeAmt = window.TONGUE_SPEED * dt
+    if entityState.tongue.isExtending
+      entityState.tongue.length += changeAmt
+      tongueVector = entityState.direction.multiply(entityState.tongue.length)
+      unless getIsCellWalkable(state, getOriginCell(entityState.origin.add(tongueVector)))
+        console.log 'bump'
+        entityState.tongue.isExtending = false
+    else
+      if entityState.tongue.length <= changeAmt
+        entityState.tongue.length = 0
+        unless entityState.tongue.npcId
+          console.log 'shloop'
+          entityState.tongue = null
+      else
+        entityState.tongue.length -= changeAmt
+
+
   # ^ may cascade
-  if canChangeTargetCell
-    fromCell = entityState.targetCell
-    inputs = [
-      ['playerLeft', new Vector3(0, 0, 1)],
-      ['playerRight', new Vector3(0, 0, -1)],
-      ['playerUp', new Vector3(1, 0, 0)],
-      ['playerDown', new Vector3(-1, 0, 0)],
-    ]
-    for [keyName, directionVector] in inputs
-      if getIsKeyDown(keyName) and getIsCellWalkable(state, fromCell.add directionVector)
-        entityState.targetCell = fromCell.add directionVector
-        entityState.direction = directionVector
-        entityState.isMoving = true
+  if canChangeTargetCell and not entityState.tongue
+    if keyboard.getIsKeyDown('action')
+      console.log ':-P'
+
+      maxLength = 0
+      tongueTest = entityState.targetCell
+      while true
+        tongueTest = tongueTest.add entityState.direction
+        if getIsCellWalkable(state, tongueTest)
+          maxLength += window.CELL_SIZE
+        else
+          break
+      entityState.tongue =
+        length: 0
+        npcId: null
+        isExtending: true
+        maxLength: maxLength
+    else
+      fromCell = entityState.targetCell
+      inputs = [
+        ['playerLeft', new Vector3(0, 0, 1)],
+        ['playerRight', new Vector3(0, 0, -1)],
+        ['playerUp', new Vector3(1, 0, 0)],
+        ['playerDown', new Vector3(-1, 0, 0)],
+      ]
+      for [keyName, directionVector] in inputs
+        if getIsKeyDown(keyName) and getIsCellWalkable(state, fromCell.add directionVector)
+          entityState.targetCell = fromCell.add directionVector
+          entityState.direction = directionVector
+          entityState.isMoving = true
 
   entityState
 
@@ -162,17 +202,17 @@ mutateNPCState = (state, entityState, t, dt) ->
 applyInput = (state, t, dt) ->
   dt /= 1000  # in seconds, please
 
-  if state.isTitleScreenVisible and keyboard.getKeyPressesSinceLastCheckpoint('action') > 0
-    return stateFactories.level1()
-
-  if state.player?
+  if state.player
     state.player = getNextPlayerState(state, state.player, t, dt)
-    #state.cameraPos = world3ToWorld2(state.player.origin)
     state.cameraPos = world3ToWorld2(getCellOrigin(new Vector3(state.boardSize.x / 2, 0, state.boardSize.z / 2)))
 
-  if state.player?
+  if state.npcs
     for npcState in state.npcs
       mutateNPCState(state, npcState, t, dt)
+
+  if state.isTitleScreenVisible and keyboard.getKeyPressesSinceLastCheckpoint('action') > 0
+    console.log 'go to level 1'
+    state = stateFactories.level1()
 
   keyboard.markKeyCheckpoint()
   state

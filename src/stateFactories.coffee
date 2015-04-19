@@ -7,7 +7,7 @@ createInitialGridEntityState = (x, z, extra={}) ->
   _.extend extra, {
     origin: new Vector3(x * window.CELL_SIZE, 0, z * window.CELL_SIZE)
     targetCell: new Vector3(x, 0, z)
-    direction: new Vector3(1, 0, 0)
+    direction: new Vector3(0, 0, -1)
     id: _.uniqueId()
   }
 
@@ -31,7 +31,7 @@ module.exports = stateFactories =
     isGridVisible: true
     boardSize: new Vector3(w, 0, h)
     cameraPos: new Vector2(0, 0)
-    player: createInitialGridEntityState(0, Math.floor(h/2))
+    player: createInitialGridEntityState(w-1, Math.floor(h/2))
     #walls: getWalls([[9, 10], [10, 10], [11, 10], [12, 10], [13, 10]])
     walls: walls
     npcs: [
