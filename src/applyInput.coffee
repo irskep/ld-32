@@ -119,9 +119,11 @@ getNextPlayerState = (state, entityState, t, dt) ->
 
   if entityState.tongue
     changeAmt = window.TONGUE_SPEED * dt
+    {direction} = entityState
     if entityState.tongue.isExtending
       entityState.tongue.length += changeAmt
-      tongueVector = entityState.direction.multiply(entityState.tongue.length)
+      tongueVector = direction.multiply(
+        entityState.tongue.length + if direction.x + direction.z > 0 then window.CELL_SIZE else 0)
       unless getIsCellWalkable(state, getOriginCell(entityState.origin.add(tongueVector)))
         console.log 'bump'
         entityState.tongue.isExtending = false
